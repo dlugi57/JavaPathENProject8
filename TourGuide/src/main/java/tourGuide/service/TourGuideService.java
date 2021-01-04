@@ -30,6 +30,7 @@ public class TourGuideService {
     boolean testMode = true;
 
     public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+        Locale.setDefault(Locale.US);
         this.gpsUtil = gpsUtil;
         this.rewardsService = rewardsService;
 
@@ -77,7 +78,6 @@ public class TourGuideService {
     }
 
     public VisitedLocation trackUserLocation(User user) {
-        // TODO: 15/12/2020 how to open gps util code source
         VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
         user.addToVisitedLocations(visitedLocation);
         rewardsService.calculateRewards(user);
