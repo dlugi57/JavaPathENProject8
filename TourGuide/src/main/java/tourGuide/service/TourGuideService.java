@@ -85,65 +85,42 @@ public class TourGuideService {
         return visitedLocation;
     }
 
+    /**
+     * Get the closest five tourist attractions to the user - no matter how far away they are.
+     *
+     * @param user object with location
+     * @return Nearby Attraction list with all data needed
+     */
     public List<NearbyAttraction> getNearByAttractions(User user) {
+
         VisitedLocation visitedLocation = getUserLocation(user);
+        // dto result list
         List<NearbyAttraction> nearbyAttractions = new ArrayList<>();
 
-        /*List result = list.stream().sorted((o1, o2)->o1.getItem().getValue().
-                compareTo(o2.getItem().getValue())).
-                collect(Collectors.toList());*/
-
-        /*
-        result = custom_obj_list.stream()
-                        .sorted(Comparator.comparingDouble(X1::obj_function))  //X1 should be class name
-                        .filter(x2 -> x2.obj_function() <= 1)
-                        .collect(Collectors.toList());
-         */
-
         List<Attraction> attractions = gpsUtil.getAttractions();
-//Double.compare(p1.getY(), p2.gety());
-        //Comparator<Attraction> reverseNameComparator =
-        //   Comparator.comparingDouble(rewardsService.getDistance(h2,
-        //  visitedLocation.location -> p.getY());
 
-
-  /*      Comparator<Attraction> reverseNameComparator =
-                (h1, h2) -> Double.compare(rewardsService.getDistance(h2,
-                        visitedLocation.location) ,rewardsService.getDistance(h1,
-                                visitedLocation.location));*/
-
-        // TODO: 04/01/2021 is that limit 5 is on the right place ??
-        List<Attraction> sortedList =
-                attractions.stream().sorted((o1, o2) -> Double.compare(rewardsService.getDistance(o1,
-                        visitedLocation.location), rewardsService.getDistance(o2,
-                        visitedLocation.location))).limit(5).collect(Collectors.toList());
-
-        sortedList.stream().forEach(attraction -> {
+        // get 5 closest attractions and populate DTO
+        attractions.parallelStream().sorted(Comparator.comparingDouble(o -> rewardsService.getDistance(o,
+                visitedLocation.location))).limit(5).forEach(attraction -> {
+            // initialize nearby attraction
             NearbyAttraction nearbyAttraction = new NearbyAttraction();
 
             nearbyAttraction.setName(attraction.attractionName);
-            // TODO: 04/01/2021 wtf with this extend of location in attraction
             nearbyAttraction.setAttractionLocation(new Location(attraction.latitude,
                     attraction.longitude));
-            // TODO: 04/01/2021 the same for this
             nearbyAttraction.setUserLocation(visitedLocation.location);
             nearbyAttraction.setDistance(rewardsService.getDistance(attraction,
                     visitedLocation.location));
-
             nearbyAttraction.setRewardPoints(rewardsService.getRewardPoints(attraction, user));
-            // TODO: 04/01/2021 how to limit for 5 users only
+
             nearbyAttractions.add(nearbyAttraction);
         });
 
+        // after using parallel stream list is disordered i needed to sort it again
+        List <NearbyAttraction> nearbyAttractionsSorted =
+                nearbyAttractions.parallelStream().sorted(Comparator.comparingDouble(a -> a.distance)).collect(Collectors.toList());
 
-   /*     for (Attraction attraction : gpsUtil.getAttractions()) {
-
-            if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-                nearbyAttractions.add(attraction);
-            }
-        }*/
-
-        return nearbyAttractions;
+        return nearbyAttractionsSorted;
     }
 
     private void addShutDownHook() {
