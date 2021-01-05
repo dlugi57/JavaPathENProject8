@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import tourGuide.DTO.NearbyAttraction;
+import tourGuide.DTO.UserLocation;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
@@ -56,6 +57,33 @@ public class TourGuideService {
         return visitedLocation;
     }
 
+    /**
+     * Get a list of every user's most recent location
+     *
+     * @return list of users recent locations
+     */
+    public Map<String, Location> getAllCurrentLocations() {
+
+        List<User> usersList = getAllUsers();
+
+        Map<String, Location> usersLocations = new HashMap<>();
+
+        usersList.parallelStream().forEach(user -> {
+
+            UserLocation userLocation = new UserLocation();
+
+            if (user.getVisitedLocations().size() > 0) {
+                userLocation.setLocation(user.getLastVisitedLocation().location);
+                userLocation.setUserId(user.getUserId());
+
+                usersLocations.put(user.getUserId().toString(), user.getLastVisitedLocation().location);
+            }
+        });
+
+        return usersLocations;
+    }
+
+
     public User getUser(String userName) {
         return internalUserMap.get(userName);
     }
@@ -70,6 +98,7 @@ public class TourGuideService {
         }
     }
 
+    // TODO: 05/01/2021 create endpoint which allows us to change user preferences  
     public List<Provider> getTripDeals(User user) {
         int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
         List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
@@ -117,7 +146,7 @@ public class TourGuideService {
         });
 
         // after using parallel stream list is disordered i needed to sort it again
-        List <NearbyAttraction> nearbyAttractionsSorted =
+        List<NearbyAttraction> nearbyAttractionsSorted =
                 nearbyAttractions.parallelStream().sorted(Comparator.comparingDouble(a -> a.distance)).collect(Collectors.toList());
 
         return nearbyAttractionsSorted;
@@ -147,6 +176,15 @@ public class TourGuideService {
             String email = userName + "@tourGuide.com";
             User user = new User(UUID.randomUUID(), userName, phone, email);
             generateUserLocationHistory(user);
+
+            //DEBUG
+             /*
+            UserReward userReward = new UserReward(new VisitedLocation(UUID.randomUUID(),
+                    new Location(generateRandomLatitude(), generateRandomLongitude()),
+                    getRandomTime()), new Attraction("name" + i, "city" + i, "state" + i,
+                    generateRandomLatitude(), generateRandomLongitude()), 666);
+
+            user.addUserReward(userReward);*/
 
             internalUserMap.put(userName, user);
         });
