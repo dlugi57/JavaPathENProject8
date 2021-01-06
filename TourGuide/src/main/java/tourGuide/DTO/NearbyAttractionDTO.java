@@ -3,7 +3,7 @@ import gpsUtil.location.Location;
 import lombok.Data;
 
 @Data
-public class NearbyAttraction {
+public class NearbyAttractionDTO {
 
     public String name;
 

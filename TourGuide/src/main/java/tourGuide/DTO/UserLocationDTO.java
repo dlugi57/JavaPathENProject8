@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class UserLocation {
+public class UserLocationDTO {
     private UUID userId;
     private Location location;
 }
