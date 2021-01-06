@@ -2,20 +2,27 @@ package tourGuide;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import com.jsoniter.output.JsonStream;
 
 import gpsUtil.location.VisitedLocation;
+import org.springframework.web.server.ResponseStatusException;
+import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
+import tourGuide.user.UserPreferences;
 import tripPricer.Provider;
 
 @RestController
 public class TourGuideController {
+
+    static final Logger logger = LogManager
+            .getLogger(TourGuideController.class);
 
 	@Autowired
 	TourGuideService tourGuideService;
@@ -79,6 +86,27 @@ public class TourGuideController {
     private User getUser(String userName) {
     	return tourGuideService.getUser(userName);
     }
-   
+
+    /**
+     * Update user preferences
+     *
+     * @param userName user name
+     * @param userPreferences user preferences
+     */
+    @PutMapping("/updateUserPreferences")
+    @ResponseStatus(HttpStatus.CREATED)
+    private void updateUserPreferences(@RequestParam String userName,
+                                       @RequestBody UserPreferencesDTO userPreferences) {
+        // if user already exist send status and error message
+        if (!tourGuideService.updateUserPreferences(userName, userPreferences)) {
+            logger.error("PUT userPreferences -> " +
+                    "updateUserPreferences /**/ HttpStatus : " + HttpStatus.CONFLICT + " /**/ Message : " +
+                    " This user don't exist");
+
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This user don't exist");
+        }
+
+        logger.info("PUT userPreferences -> updateUserPreferences /**/ HttpStatus : " + HttpStatus.CREATED);
+    }
 
 }

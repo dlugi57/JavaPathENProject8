@@ -4,18 +4,23 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
+import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import tourGuide.DTO.NearbyAttraction;
-import tourGuide.DTO.UserLocation;
+import tourGuide.DTO.NearbyAttractionDTO;
+import tourGuide.DTO.UserLocationDTO;
+import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
+import tourGuide.user.UserPreferences;
 import tourGuide.user.UserReward;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -70,11 +75,11 @@ public class TourGuideService {
 
         usersList.parallelStream().forEach(user -> {
 
-            UserLocation userLocation = new UserLocation();
+            UserLocationDTO userLocationDTO = new UserLocationDTO();
 
             if (user.getVisitedLocations().size() > 0) {
-                userLocation.setLocation(user.getLastVisitedLocation().location);
-                userLocation.setUserId(user.getUserId());
+                userLocationDTO.setLocation(user.getLastVisitedLocation().location);
+                userLocationDTO.setUserId(user.getUserId());
 
                 usersLocations.put(user.getUserId().toString(), user.getLastVisitedLocation().location);
             }
@@ -98,7 +103,80 @@ public class TourGuideService {
         }
     }
 
-    // TODO: 05/01/2021 create endpoint which allows us to change user preferences  
+    // TODO: 06/01/2021 is that right with the internal User Map ?
+    // TODO: 06/01/2021 what is the way to send money by json jackson  
+    // TODO: 06/01/2021 the method to check if parameter exist
+
+    /**
+     * Update user preferences
+     *
+     * @param userName           user name
+     * @param userPreferencesDTO user preferences DTO object
+     * @return true if success
+     */
+    public boolean updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) {
+        if (!internalUserMap.containsKey(userName)) {
+            return false;
+        }
+        User user = internalUserMap.get(userName);
+
+        UserPreferences userPreferences = new UserPreferences();
+
+        // set new currency if not use by user default
+        CurrencyUnit currency;
+        if (userPreferencesDTO.getCurrency() != null) {
+            currency = Monetary.getCurrency(userPreferencesDTO.getCurrency());
+            userPreferences.setCurrency(Monetary.getCurrency(userPreferencesDTO.getCurrency()));
+        } else {
+            currency = userPreferences.getCurrency();
+        }
+
+        //attractionProximity
+        if (userPreferencesDTO.getAttractionProximity() != null){
+            userPreferences.setAttractionProximity(userPreferencesDTO.getAttractionProximity());
+        }
+
+        //lowerPricePoint
+        if (userPreferencesDTO.getLowerPricePoint() != null) {
+            userPreferences.setLowerPricePoint(Money.of(
+                    userPreferencesDTO.getLowerPricePoint(),
+                    currency));
+        }
+
+        //highPricePoint
+        if (userPreferencesDTO.getHighPricePoint() != null) {
+            userPreferences.setHighPricePoint(Money.of(
+                    userPreferencesDTO.getHighPricePoint(),
+                    currency));
+        }
+
+        // tripDuration
+        if (userPreferencesDTO.getTripDuration() != null){
+            userPreferences.setTripDuration(userPreferencesDTO.getTripDuration());
+        }
+
+        // ticketQuantity
+        if (userPreferencesDTO.getTicketQuantity() != null){
+            userPreferences.setTicketQuantity(userPreferencesDTO.getTicketQuantity());
+        }
+
+        // numberOfAdults
+        if (userPreferencesDTO.getNumberOfAdults() != null){
+            userPreferences.setNumberOfAdults(userPreferencesDTO.getNumberOfAdults());
+        }
+
+        // numberOfChildren
+        if (userPreferencesDTO.getNumberOfChildren() != null){
+            userPreferences.setNumberOfChildren(userPreferencesDTO.getNumberOfChildren());
+        }
+
+        user.setUserPreferences(userPreferences);
+
+        internalUserMap.put(userName, user);
+
+        return true;
+    }
+
     public List<Provider> getTripDeals(User user) {
         int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
         List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
@@ -120,11 +198,11 @@ public class TourGuideService {
      * @param user object with location
      * @return Nearby Attraction list with all data needed
      */
-    public List<NearbyAttraction> getNearByAttractions(User user) {
+    public List<NearbyAttractionDTO> getNearByAttractions(User user) {
 
         VisitedLocation visitedLocation = getUserLocation(user);
         // dto result list
-        List<NearbyAttraction> nearbyAttractions = new ArrayList<>();
+        List<NearbyAttractionDTO> nearbyAttractions = new ArrayList<>();
 
         List<Attraction> attractions = gpsUtil.getAttractions();
 
@@ -132,21 +210,21 @@ public class TourGuideService {
         attractions.parallelStream().sorted(Comparator.comparingDouble(o -> rewardsService.getDistance(o,
                 visitedLocation.location))).limit(5).forEach(attraction -> {
             // initialize nearby attraction
-            NearbyAttraction nearbyAttraction = new NearbyAttraction();
+            NearbyAttractionDTO nearbyAttractionDTO = new NearbyAttractionDTO();
 
-            nearbyAttraction.setName(attraction.attractionName);
-            nearbyAttraction.setAttractionLocation(new Location(attraction.latitude,
+            nearbyAttractionDTO.setName(attraction.attractionName);
+            nearbyAttractionDTO.setAttractionLocation(new Location(attraction.latitude,
                     attraction.longitude));
-            nearbyAttraction.setUserLocation(visitedLocation.location);
-            nearbyAttraction.setDistance(rewardsService.getDistance(attraction,
+            nearbyAttractionDTO.setUserLocation(visitedLocation.location);
+            nearbyAttractionDTO.setDistance(rewardsService.getDistance(attraction,
                     visitedLocation.location));
-            nearbyAttraction.setRewardPoints(rewardsService.getRewardPoints(attraction, user));
+            nearbyAttractionDTO.setRewardPoints(rewardsService.getRewardPoints(attraction, user));
 
-            nearbyAttractions.add(nearbyAttraction);
+            nearbyAttractions.add(nearbyAttractionDTO);
         });
 
         // after using parallel stream list is disordered i needed to sort it again
-        List<NearbyAttraction> nearbyAttractionsSorted =
+        List<NearbyAttractionDTO> nearbyAttractionsSorted =
                 nearbyAttractions.parallelStream().sorted(Comparator.comparingDouble(a -> a.distance)).collect(Collectors.toList());
 
         return nearbyAttractionsSorted;
