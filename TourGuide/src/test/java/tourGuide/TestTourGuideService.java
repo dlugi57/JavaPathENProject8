@@ -10,10 +10,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
 import gpsUtil.location.VisitedLocation;
 import rewardCentral.RewardCentral;
-import tourGuide.DTO.NearbyAttraction;
+import tourGuide.DTO.NearbyAttractionDTO;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
@@ -104,7 +103,7 @@ public class TestTourGuideService {
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
 		
-		List<NearbyAttraction> attractions = tourGuideService.getNearByAttractions(user);
+		List<NearbyAttractionDTO> attractions = tourGuideService.getNearByAttractions(user);
 		
 		tourGuideService.tracker.stopTracking();
 		
