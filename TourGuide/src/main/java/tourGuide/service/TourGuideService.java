@@ -24,6 +24,9 @@ import javax.money.Monetary;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -185,11 +188,36 @@ public class TourGuideService {
         return providers;
     }
 
+    // TODO: 07/01/2021 at this place make some magic
     public VisitedLocation trackUserLocation(User user) {
         VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
         user.addToVisitedLocations(visitedLocation);
         rewardsService.calculateRewards(user);
         return visitedLocation;
+    }
+
+    public void trackListOfUserLocation1(List<User> users) throws InterruptedException {
+        ExecutorService executorService = Executors.newFixedThreadPool(1000);
+
+        for (User user : users){
+            Runnable runnable = () -> {
+                trackUserLocation(user);
+            };
+
+            executorService.execute(runnable);
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(25, TimeUnit.MINUTES);
+
+        return;
+    }
+
+    public void trackListOfUserLocation(List<User> users) throws InterruptedException {
+
+        users.parallelStream().forEach(u->trackUserLocation(u));
+
+        return;
     }
 
     /**
@@ -271,7 +299,9 @@ public class TourGuideService {
 
     private void generateUserLocationHistory(User user) {
         IntStream.range(0, 3).forEach(i -> {
-            user.addToVisitedLocations(new VisitedLocation(user.getUserId(), new Location(generateRandomLatitude(), generateRandomLongitude()), getRandomTime()));
+           // user.addToVisitedLocations(new VisitedLocation(user.getUserId(),
+            //        new Location(generateRandomLatitude(), generateRandomLongitude()),
+             //       getRandomTime()));
         });
     }
 
