@@ -1,6 +1,10 @@
 package tourGuide.service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.stereotype.Service;
 
@@ -37,24 +41,57 @@ public class RewardsService {
 	}
 	
 	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = user.getVisitedLocations();
-		List<Attraction> attractions = gpsUtil.getAttractions();
-		
-		for(VisitedLocation visitedLocation : userLocations) {
+		// TODO: 07/01/2021
+		CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>();
+
+		CopyOnWriteArrayList<Attraction> attractions = new CopyOnWriteArrayList<>();
+		userLocations.addAll(user.getVisitedLocations());
+		attractions.addAll(gpsUtil.getAttractions());
+
+
+		//List<VisitedLocation> userLocations = user.getVisitedLocations();
+		//List<Attraction> attractions = gpsUtil.getAttractions();
+		// TODO: 07/01/2021 at this place make magic for both performance tests ?
+
+		userLocations.parallelStream().forEach(visitedLocation->attractions.parallelStream().forEach(attraction->{
+			if(user.getUserRewards().parallelStream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
+				// if he passed just next to the attraction
+				if(nearAttraction(visitedLocation, attraction)) {
+					user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
+				}
+			}
+		}));
+
+
+
+
+
+/*		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
-				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
+				// if user didn't visit it yet
+				if(user.getUserRewards().parallelStream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
+					// if he passed just next to the attraction
 					if(nearAttraction(visitedLocation, attraction)) {
 						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
 					}
 				}
 			}
-		}
+		}*/
 	}
-	
+
+
+
+
+
+
+
+
+
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
 		return getDistance(attraction, location) > attractionProximityRange ? false : true;
 	}
-	
+
+	// TODO: 07/01/2021 was is das?  
 	private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
 		return getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
 	}
