@@ -82,6 +82,12 @@ public class TourGuideController {
     	return JsonStream.serialize(providers);
     }
 
+    /**
+     * Get user
+     *
+     * @param userName user name
+     * @return user
+     */
     @RequestMapping("/getUser")
     private User getUser(String userName) {
     	return tourGuideService.getUser(userName);
