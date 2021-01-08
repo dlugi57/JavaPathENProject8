@@ -71,7 +71,13 @@ public class User {
     }
 
     public void addUserReward(UserReward userReward) {
-        if (userRewards.stream().filter(r -> !r.attraction.attractionName.equals(userReward.attraction)).count() == 0) {
+        // TODO: 08/01/2021 if that is right i already check it in the calculate reward but there
+        //  is not working
+        //  if (userRewards.stream().filter(r -> !r.attraction.attractionName.equals(userReward
+        //  .attraction)).count() == 0) {
+
+        if (userRewards.stream().filter(r -> r.attraction.attractionName.equals(userReward
+         .attraction.attractionName)).count() == 0) {
             userRewards.add(userReward);
         }
     }

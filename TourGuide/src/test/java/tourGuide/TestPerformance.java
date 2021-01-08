@@ -55,13 +55,14 @@ public class TestPerformance {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-		allUsers.parallelStream().forEach(u->tourGuideService.trackUserLocation(u));
+        // TODO: 08/01/2021 can i just send more at once ?
+		//allUsers.parallelStream().forEach(u->tourGuideService.trackUserLocation(u));
 
 
 		//tourGuideService.trackListOfUserLocation(allUsers);
-	/*	for(User user : allUsers) {
+		for(User user : allUsers) {
 			tourGuideService.trackUserLocation(user);
-		}*/
+		}
         stopWatch.stop();
         tourGuideService.tracker.stopTracking();
 
@@ -71,7 +72,7 @@ public class TestPerformance {
 
     //@Ignore
     @Test
-    public void highVolumeGetRewards() throws InterruptedException {
+    public void highVolumeGetRewards() {
         GpsUtil gpsUtil = new GpsUtil();
         RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 
