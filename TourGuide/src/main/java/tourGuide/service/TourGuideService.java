@@ -4,7 +4,6 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
-import org.javamoney.moneta.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,6 +11,7 @@ import tourGuide.DTO.NearbyAttractionDTO;
 import tourGuide.DTO.UserLocationDTO;
 import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.mapper.UserPreferencesMapper;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
@@ -19,29 +19,38 @@ import tourGuide.user.UserReward;
 import tripPricer.Provider;
 import tripPricer.TripPricer;
 
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 @Service
 public class TourGuideService {
-    private Logger logger = LoggerFactory.getLogger(TourGuideService.class);
+
+    private final Logger logger = LoggerFactory.getLogger(TourGuideService.class);
+
     private final GpsUtil gpsUtil;
     private final RewardsService rewardsService;
     private final TripPricer tripPricer = new TripPricer();
     public final Tracker tracker;
+
     boolean testMode = true;
 
+    /**
+     * Service constructor
+     *
+     * @param gpsUtil        initialize gps util
+     * @param rewardsService initialize reward service
+     */
     public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+        // patch of wrong locale in application
         Locale.setDefault(Locale.US);
+
         this.gpsUtil = gpsUtil;
         this.rewardsService = rewardsService;
+        //initialize tracker
         tracker = new Tracker(this);
 
         if (testMode) {
@@ -49,34 +58,45 @@ public class TourGuideService {
             logger.debug("Initializing users");
             initializeInternalUsers();
             logger.debug("Finished initializing users");
-        }else{
+        } else {
             tracker.startTracking();
         }
-
 
         addShutDownHook();
     }
 
+    /**
+     * Get user rewards
+     *
+     * @param user user object
+     * @return user reward
+     */
     public List<UserReward> getUserRewards(User user) {
         return user.getUserRewards();
     }
 
+    /**
+     * Get user location last location if not track user
+     *
+     * @param user user object
+     * @return last visited location
+     * @throws ExecutionException   execution exception when use completable future
+     * @throws InterruptedException interrupted exception when use completable future
+     */
     public VisitedLocation getUserLocation(User user) throws ExecutionException, InterruptedException {
-        VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ?
+        return (user.getVisitedLocations().size() > 0) ?
                 user.getLastVisitedLocation() :
-                trackUserLocation(user).get()   ;
-        return visitedLocation;
+                trackUserLocation(user).get();
     }
 
     /**
-     * Get a list of every user's most recent location
+     * Get a list of every users most recent location
      *
      * @return list of users recent locations
      */
     public Map<String, Location> getAllCurrentLocations() {
-
+// TODO: 13/01/2021 we did'n chack this one last time
         List<User> usersList = getAllUsers();
-
         Map<String, Location> usersLocations = new HashMap<>();
 
         usersList.parallelStream().forEach(user -> {
@@ -86,7 +106,6 @@ public class TourGuideService {
             if (user.getVisitedLocations().size() > 0) {
                 userLocationDTO.setLocation(user.getLastVisitedLocation().location);
                 userLocationDTO.setUserId(user.getUserId());
-
                 usersLocations.put(user.getUserId().toString(), user.getLastVisitedLocation().location);
             }
         });
@@ -94,15 +113,30 @@ public class TourGuideService {
         return usersLocations;
     }
 
-
+    /**
+     * Get user
+     *
+     * @param userName user name string
+     * @return user
+     */
     public User getUser(String userName) {
         return internalUserMap.get(userName);
     }
 
+    /**
+     * Get all users
+     *
+     * @return list of users
+     */
     public List<User> getAllUsers() {
         return internalUserMap.values().stream().collect(Collectors.toList());
     }
 
+    /**
+     * Add user
+     *
+     * @param user user object with obligatory parameters
+     */
     public void addUser(User user) {
         if (!internalUserMap.containsKey(user.getUserName())) {
             internalUserMap.put(user.getUserName(), user);
@@ -118,64 +152,14 @@ public class TourGuideService {
      */
     public boolean updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) {
 
-        // TODO: 12/01/2021 create mapper or hellper to make this transition
-        // TODO: 12/01/2021 search the transaction from DTO to model
-        // TODO: 12/01/2021 Jackson – Custom Serializer
-        
+        // TODO: 13/01/2021 need to test it  
+
         if (!internalUserMap.containsKey(userName)) {
             return false;
         }
         User user = internalUserMap.get(userName);
 
-        UserPreferences userPreferences = new UserPreferences();
-
-        // set new currency if not use by user default
-        CurrencyUnit currency;
-        if (userPreferencesDTO.getCurrency() != null) {
-            currency = Monetary.getCurrency(userPreferencesDTO.getCurrency());
-            userPreferences.setCurrency(Monetary.getCurrency(userPreferencesDTO.getCurrency()));
-        } else {
-            currency = userPreferences.getCurrency();
-        }
-
-        //attractionProximity
-        if (userPreferencesDTO.getAttractionProximity() != null){
-            userPreferences.setAttractionProximity(userPreferencesDTO.getAttractionProximity());
-        }
-
-        //lowerPricePoint
-        if (userPreferencesDTO.getLowerPricePoint() != null) {
-            userPreferences.setLowerPricePoint(Money.of(
-                    userPreferencesDTO.getLowerPricePoint(),
-                    currency));
-        }
-
-        //highPricePoint
-        if (userPreferencesDTO.getHighPricePoint() != null) {
-            userPreferences.setHighPricePoint(Money.of(
-                    userPreferencesDTO.getHighPricePoint(),
-                    currency));
-        }
-
-        // tripDuration
-        if (userPreferencesDTO.getTripDuration() != null){
-            userPreferences.setTripDuration(userPreferencesDTO.getTripDuration());
-        }
-
-        // ticketQuantity
-        if (userPreferencesDTO.getTicketQuantity() != null){
-            userPreferences.setTicketQuantity(userPreferencesDTO.getTicketQuantity());
-        }
-
-        // numberOfAdults
-        if (userPreferencesDTO.getNumberOfAdults() != null){
-            userPreferences.setNumberOfAdults(userPreferencesDTO.getNumberOfAdults());
-        }
-
-        // numberOfChildren
-        if (userPreferencesDTO.getNumberOfChildren() != null){
-            userPreferences.setNumberOfChildren(userPreferencesDTO.getNumberOfChildren());
-        }
+        UserPreferences userPreferences = new UserPreferencesMapper().mapPreferences(userPreferencesDTO);
 
         user.setUserPreferences(userPreferences);
 
@@ -184,6 +168,12 @@ public class TourGuideService {
         return true;
     }
 
+    /**
+     * Get trip deals
+     *
+     * @param user user object
+     * @return list of providers
+     */
     public List<Provider> getTripDeals(User user) {
         int cumulatativeRewardPoints = user.getUserRewards().stream().mapToInt(i -> i.getRewardPoints()).sum();
         List<Provider> providers = tripPricer.getPrice(tripPricerApiKey, user.getUserId(), user.getUserPreferences().getNumberOfAdults(),
@@ -192,10 +182,15 @@ public class TourGuideService {
         return providers;
     }
 
-    // TODO: 07/01/2021 at this place make some magic
+    /**
+     * Track the last user position
+     *
+     * @param user user object
+     * @return last visited location
+     */
     public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
-
-
+        // TODO: 13/01/2021 i used supply async to get result and then calculate rewards
+        // set completable future supply methode to get asynchronous result from future
         return CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId())).thenApply(visitedLocation -> {
             user.addToVisitedLocations(visitedLocation);
             try {
@@ -207,44 +202,6 @@ public class TourGuideService {
             }
             return visitedLocation;
         });
-
-
-
- /*       VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-        user.addToVisitedLocations(visitedLocation);
-
-        CompletableFuture<Void> combinedFuture
-                = CompletableFuture.allOf(rewardsService.calculateRewards(user));
-        //combinedFuture.get();
-
-
-
-        return visitedLocation;*/
-    }
-
-    public void trackListOfUserLocation(List<User> users) throws InterruptedException {
-        // TODO: 12/01/2021 completable futures 
-        ExecutorService executorService = Executors.newFixedThreadPool(1000);
-
-        for (User user : users){
-            Runnable runnable = () -> {
-                trackUserLocation(user);
-            };
-
-            executorService.execute(runnable);
-        }
-
-        executorService.shutdown();
-        executorService.awaitTermination(25, TimeUnit.MINUTES);
-
-        return;
-    }
-
-    public void trackListOfUserLocation1(List<User> users) throws InterruptedException {
-
-        users.parallelStream().forEach(u->trackUserLocation(u));
-
-        return;
     }
 
     /**
@@ -285,6 +242,9 @@ public class TourGuideService {
         return nearbyAttractionsSorted;
     }
 
+    /**
+     * stop users tracking service
+     */
     private void addShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
