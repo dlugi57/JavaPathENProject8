@@ -60,7 +60,6 @@ public class RewardsService {
         return getDistance(attraction, location) > attractionProximityRange ? false : true;
     }
 
-    // TODO: 07/01/2021 was is das?
     private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
         return getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
     }
