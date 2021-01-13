@@ -21,7 +21,7 @@ public class Tracker extends Thread {
     public Tracker(TourGuideService tourGuideService) {
         this.tourGuideService = tourGuideService;
 
-        executorService.submit(this);
+        //executorService.submit(this);
     }
 
     /**
@@ -30,6 +30,10 @@ public class Tracker extends Thread {
     public void stopTracking() {
         stop = true;
         executorService.shutdownNow();
+    }
+
+    public void startTracking(){
+        executorService.submit(this);
     }
 
     @Override
@@ -46,7 +50,10 @@ public class Tracker extends Thread {
             stopWatch.start();
 
             // set parallel stream to gain on performance
-            users.parallelStream().forEach(u -> tourGuideService.trackUserLocation(u));
+            users.forEach(u -> {
+                tourGuideService.trackUserLocation(u);
+            });
+            //users.parallelStream().forEach(u -> tourGuideService.trackUserLocation(u));
 
             stopWatch.stop();
             logger.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
