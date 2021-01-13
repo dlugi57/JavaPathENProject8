@@ -56,50 +56,6 @@ public class RewardsService {
         });
     }
 
-
-    public CompletableFuture calculateRewards1(User user) {
-
-        // TODO: 12/01/2021 check when  CompletableFuture finishzed
-        return CompletableFuture.runAsync(() -> {
-            CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>();
-            // CopyOnWriteArrayList<Attraction> attractions = new CopyOnWriteArrayList<>();
-
-            userLocations.addAll(user.getVisitedLocations());
-            // attractions.addAll(gpsUtil.getAttractions());
-
-            //List<VisitedLocation> userLocations = user.getVisitedLocations();
-            List<Attraction> attractions = gpsUtil.getAttractions();
-            // TODO: 07/01/2021 at this place make magic for both performance tests ?
-
-            userLocations.parallelStream().forEach(visitedLocation -> attractions.parallelStream()
-                    .forEach(attraction -> {
-                        // TODO: 08/01/2021 why this one is not working properly?
-                        if (user.getUserRewards().parallelStream().filter(r -> r.attraction
-                                .attractionName.equals(attraction.attractionName)).count() == 0) {
-                            // if he passed just next to the attraction
-                            if (nearAttraction(visitedLocation, attraction)) {
-                                user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-                            }
-                        }
-                    }));
-        });
-
-
-
-		/*for(VisitedLocation visitedLocation : userLocations) {
-			for(Attraction attraction : attractions) {
-				// if user didn't visit it yet
-				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
-					// if he passed just next to the attraction
-					if(nearAttraction(visitedLocation, attraction)) {
-						user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-					}
-				}
-			}
-		}*/
-    }
-
-
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return getDistance(attraction, location) > attractionProximityRange ? false : true;
     }
