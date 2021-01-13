@@ -24,11 +24,10 @@ import javax.money.Monetary;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 public class TourGuideService {
@@ -43,14 +42,18 @@ public class TourGuideService {
         Locale.setDefault(Locale.US);
         this.gpsUtil = gpsUtil;
         this.rewardsService = rewardsService;
+        tracker = new Tracker(this);
 
         if (testMode) {
             logger.info("TestMode enabled");
             logger.debug("Initializing users");
             initializeInternalUsers();
             logger.debug("Finished initializing users");
+        }else{
+            tracker.startTracking();
         }
-        tracker = new Tracker(this);
+
+
         addShutDownHook();
     }
 
@@ -58,10 +61,10 @@ public class TourGuideService {
         return user.getUserRewards();
     }
 
-    public VisitedLocation getUserLocation(User user) {
+    public VisitedLocation getUserLocation(User user) throws ExecutionException, InterruptedException {
         VisitedLocation visitedLocation = (user.getVisitedLocations().size() > 0) ?
                 user.getLastVisitedLocation() :
-                trackUserLocation(user);
+                trackUserLocation(user).get()   ;
         return visitedLocation;
     }
 
@@ -106,10 +109,6 @@ public class TourGuideService {
         }
     }
 
-    // TODO: 06/01/2021 is that right with the internal User Map ?
-    // TODO: 06/01/2021 what is the way to send money by json jackson  
-    // TODO: 06/01/2021 the method to check if parameter exist
-
     /**
      * Update user preferences
      *
@@ -118,6 +117,11 @@ public class TourGuideService {
      * @return true if success
      */
     public boolean updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) {
+
+        // TODO: 12/01/2021 create mapper or hellper to make this transition
+        // TODO: 12/01/2021 search the transaction from DTO to model
+        // TODO: 12/01/2021 Jackson – Custom Serializer
+        
         if (!internalUserMap.containsKey(userName)) {
             return false;
         }
@@ -189,14 +193,37 @@ public class TourGuideService {
     }
 
     // TODO: 07/01/2021 at this place make some magic
-    public VisitedLocation trackUserLocation(User user) {
-        VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+    public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
+
+
+        return CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId())).thenApply(visitedLocation -> {
+            user.addToVisitedLocations(visitedLocation);
+            try {
+                rewardsService.calculateRewards(user).get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+            return visitedLocation;
+        });
+
+
+
+ /*       VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
         user.addToVisitedLocations(visitedLocation);
-        rewardsService.calculateRewards(user);
-        return visitedLocation;
+
+        CompletableFuture<Void> combinedFuture
+                = CompletableFuture.allOf(rewardsService.calculateRewards(user));
+        //combinedFuture.get();
+
+
+
+        return visitedLocation;*/
     }
 
-    public void trackListOfUserLocation1(List<User> users) throws InterruptedException {
+    public void trackListOfUserLocation(List<User> users) throws InterruptedException {
+        // TODO: 12/01/2021 completable futures 
         ExecutorService executorService = Executors.newFixedThreadPool(1000);
 
         for (User user : users){
@@ -213,7 +240,7 @@ public class TourGuideService {
         return;
     }
 
-    public void trackListOfUserLocation(List<User> users) throws InterruptedException {
+    public void trackListOfUserLocation1(List<User> users) throws InterruptedException {
 
         users.parallelStream().forEach(u->trackUserLocation(u));
 
@@ -226,7 +253,7 @@ public class TourGuideService {
      * @param user object with location
      * @return Nearby Attraction list with all data needed
      */
-    public List<NearbyAttractionDTO> getNearByAttractions(User user) {
+    public List<NearbyAttractionDTO> getNearByAttractions(User user) throws ExecutionException, InterruptedException {
 
         VisitedLocation visitedLocation = getUserLocation(user);
         // dto result list
