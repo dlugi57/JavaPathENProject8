@@ -1,23 +1,20 @@
 package tourGuide;
 
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
+import com.jsoniter.output.JsonStream;
+import gpsUtil.location.VisitedLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import com.jsoniter.output.JsonStream;
-
-import gpsUtil.location.VisitedLocation;
 import org.springframework.web.server.ResponseStatusException;
 import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
-import tourGuide.user.UserPreferences;
 import tripPricer.Provider;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 public class TourGuideController {
@@ -25,8 +22,8 @@ public class TourGuideController {
     static final Logger logger = LogManager
             .getLogger(TourGuideController.class);
 
-	@Autowired
-	TourGuideService tourGuideService;
+    @Autowired
+    TourGuideService tourGuideService;
 
     /**
      * Home page
@@ -44,10 +41,10 @@ public class TourGuideController {
      * @param userName user name
      * @return json with actual user location
      */
-    @RequestMapping("/getLocation") 
+    @RequestMapping("/getLocation")
     public String getLocation(@RequestParam String userName) throws ExecutionException, InterruptedException {
-    	VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
-		return JsonStream.serialize(visitedLocation.location);
+        VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
+        return JsonStream.serialize(visitedLocation.location);
     }
 
     /**
@@ -56,15 +53,15 @@ public class TourGuideController {
      * @param userName user name
      * @return json with 5 closest attractions
      */
-    @RequestMapping("/getNearbyAttractions") 
+    @RequestMapping("/getNearbyAttractions")
     public String getNearbyAttractions(@RequestParam String userName) throws ExecutionException, InterruptedException {
         User user = getUser(userName);
-    	return JsonStream.serialize(tourGuideService.getNearByAttractions(user));
+        return JsonStream.serialize(tourGuideService.getNearByAttractions(user));
     }
-    
-    @RequestMapping("/getRewards") 
+
+    @RequestMapping("/getRewards")
     public String getRewards(@RequestParam String userName) {
-    	return JsonStream.serialize(tourGuideService.getUserRewards(getUser(userName)));
+        return JsonStream.serialize(tourGuideService.getUserRewards(getUser(userName)));
     }
 
     /**
@@ -74,13 +71,13 @@ public class TourGuideController {
      */
     @RequestMapping("/getAllCurrentLocations")
     public String getAllCurrentLocations() {
-    	return JsonStream.serialize(tourGuideService.getAllCurrentLocations());
+        return JsonStream.serialize(tourGuideService.getAllCurrentLocations());
     }
-    
+
     @RequestMapping("/getTripDeals")
     public String getTripDeals(@RequestParam String userName) {
-    	List<Provider> providers = tourGuideService.getTripDeals(getUser(userName));
-    	return JsonStream.serialize(providers);
+        List<Provider> providers = tourGuideService.getTripDeals(getUser(userName));
+        return JsonStream.serialize(providers);
     }
 
     /**
@@ -91,13 +88,13 @@ public class TourGuideController {
      */
     @RequestMapping("/getUser")
     private User getUser(String userName) {
-    	return tourGuideService.getUser(userName);
+        return tourGuideService.getUser(userName);
     }
 
     /**
      * Update user preferences
      *
-     * @param userName user name
+     * @param userName        user name
      * @param userPreferences user preferences
      */
     @PutMapping("/updateUserPreferences")
