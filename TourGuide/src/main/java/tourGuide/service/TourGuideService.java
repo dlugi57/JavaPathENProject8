@@ -152,8 +152,6 @@ public class TourGuideService {
      */
     public boolean updateUserPreferences(String userName, UserPreferencesDTO userPreferencesDTO) {
 
-        // TODO: 13/01/2021 need to test it  
-
         if (!internalUserMap.containsKey(userName)) {
             return false;
         }
@@ -235,7 +233,7 @@ public class TourGuideService {
             nearbyAttractions.add(nearbyAttractionDTO);
         });
 
-        // after using parallel stream list is disordered i needed to sort it again
+        // after using parallel stream list is disordered we sort it again
         List<NearbyAttractionDTO> nearbyAttractionsSorted =
                 nearbyAttractions.parallelStream().sorted(Comparator.comparingDouble(a -> a.distance)).collect(Collectors.toList());
 
