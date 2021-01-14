@@ -93,7 +93,6 @@ public class TestTourGuideService {
 		assertEquals(user.getUserId(), visitedLocation.userId);
 	}
 	
-	//@Ignore // Not yet implemented
 	@Test
 	public void getNearbyAttractions() throws ExecutionException, InterruptedException {
 		GpsUtil gpsUtil = new GpsUtil();
