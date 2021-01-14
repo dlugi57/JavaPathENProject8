@@ -12,9 +12,12 @@ import tourGuide.user.UserReward;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class RewardsService {
+
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
 
     // proximity in miles
@@ -24,50 +27,124 @@ public class RewardsService {
     private final GpsUtil gpsUtil;
     private final RewardCentral rewardsCentral;
 
+    /**
+     * Initialization of services
+     *
+     * @param gpsUtil       gps service instantiation
+     * @param rewardCentral reward central instantiation
+     */
     public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
         this.gpsUtil = gpsUtil;
         this.rewardsCentral = rewardCentral;
     }
 
+    /**
+     * Set proximity buffer to know when user will get points of attraction
+     *
+     * @param proximityBuffer proximity distance of attraction
+     */
     public void setProximityBuffer(int proximityBuffer) {
         this.proximityBuffer = proximityBuffer;
     }
 
+    /**
+     * Set default proximity attraction distance
+     */
     public void setDefaultProximityBuffer() {
         proximityBuffer = defaultProximityBuffer;
     }
 
-
+    /**
+     * Calculate user rewards by attraction visited
+     *
+     * @param user user object
+     * @return reward included in user object
+     */
     public CompletableFuture calculateRewards(User user) {
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
         return CompletableFuture.runAsync(() -> {
+
             List<Attraction> attractions = gpsUtil.getAttractions();
+            // to prevent asynchronous array insertion
             CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>();
 
             userLocations.addAll(user.getVisitedLocations());
-            for(VisitedLocation visitedLocation : userLocations) {
+
+            userLocations.forEach(vl -> {
+                attractions.stream()
+                        .filter(a -> nearAttraction(vl, a))
+                        .forEach(a -> {
+                            System.out.printf("ja");
+
+                            if (user.getUserRewards().stream().noneMatch(
+                                    r -> r.attraction.attractionName
+                                            .equals(a.attractionName))) {
+                                System.out.printf("ja pierdole");
+                                user.addUserReward(new UserReward(vl, a,
+                                        getRewardPoints(a, user)));
+                            }
+                        });
+            });
+
+            /*for(VisitedLocation visitedLocation : userLocations) {
                 for(Attraction attraction : attractions) {
+                    // check if user have already this attraction
                     if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
+                        // check if attraction is in the limited reward distance
                         if(nearAttraction(visitedLocation, attraction)) {
+                            // TODO: 14/01/2021 get reward points takes the most of the time
                             user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
                         }
                     }
                 }
-            }
+            }*/
+            //return user;
+            // TODO: 14/01/2021 with ececutor is much much faster
+            //}, executorService);
         });
     }
 
+    /**
+     * Check if location is in the limited distance from attraction
+     *
+     * @param attraction attraction
+     * @param location   location
+     * @return true when success
+     */
     public boolean isWithinAttractionProximity(Attraction attraction, Location location) {
         return getDistance(attraction, location) > attractionProximityRange ? false : true;
     }
 
+    /**
+     * Check if user is in the limited distance from attraction
+     *
+     * @param attraction      attraction
+     * @param visitedLocation user visited location
+     * @return true when success
+     */
     private boolean nearAttraction(VisitedLocation visitedLocation, Attraction attraction) {
         return getDistance(attraction, visitedLocation.location) > proximityBuffer ? false : true;
     }
 
+    /**
+     * Get reward points
+     *
+     * @param attraction attraction object
+     * @param user       user object
+     * @return reward points
+     */
     public int getRewardPoints(Attraction attraction, User user) {
         return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
     }
 
+    /**
+     * Calculate distance from one location to another
+     *
+     * @param loc1 first comparative location
+     * @param loc2 second comparative location
+     * @return distance in meters
+     */
     public double getDistance(Location loc1, Location loc2) {
         double lat1 = Math.toRadians(loc1.latitude);
         double lon1 = Math.toRadians(loc1.longitude);
