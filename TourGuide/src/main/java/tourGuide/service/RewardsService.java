@@ -75,14 +75,9 @@ public class RewardsService {
                 attractions.stream()
                         .filter(a -> nearAttraction(vl, a))
                         .forEach(a -> {
-                            System.out.printf("ja");
-
                             if (user.getUserRewards().stream().noneMatch(
-                                    r -> r.attraction.attractionName
-                                            .equals(a.attractionName))) {
-                                System.out.printf("ja pierdole");
-                                user.addUserReward(new UserReward(vl, a,
-                                        getRewardPoints(a, user)));
+                                    r -> r.attraction.attractionName.equals(a.attractionName))) {
+                                user.addUserReward(new UserReward(vl, a, getRewardPoints(a, user)));
                             }
                         });
             });
