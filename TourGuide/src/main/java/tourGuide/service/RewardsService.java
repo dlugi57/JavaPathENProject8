@@ -62,7 +62,8 @@ public class RewardsService {
      */
     public CompletableFuture calculateRewards(User user) {
 
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        ExecutorService executorService = Executors.newFixedThreadPool(1000);
+
         return CompletableFuture.runAsync(() -> {
 
             List<Attraction> attractions = gpsUtil.getAttractions();
@@ -73,31 +74,17 @@ public class RewardsService {
 
             userLocations.forEach(vl -> {
                 attractions.stream()
+                        // check if attraction is in the limited reward distance
                         .filter(a -> nearAttraction(vl, a))
                         .forEach(a -> {
+                            // check if user have already this attraction
                             if (user.getUserRewards().stream().noneMatch(
                                     r -> r.attraction.attractionName.equals(a.attractionName))) {
                                 user.addUserReward(new UserReward(vl, a, getRewardPoints(a, user)));
                             }
                         });
             });
-
-            /*for(VisitedLocation visitedLocation : userLocations) {
-                for(Attraction attraction : attractions) {
-                    // check if user have already this attraction
-                    if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
-                        // check if attraction is in the limited reward distance
-                        if(nearAttraction(visitedLocation, attraction)) {
-                            // TODO: 14/01/2021 get reward points takes the most of the time
-                            user.addUserReward(new UserReward(visitedLocation, attraction, getRewardPoints(attraction, user)));
-                        }
-                    }
-                }
-            }*/
-            //return user;
-            // TODO: 14/01/2021 with ececutor is much much faster
-            //}, executorService);
-        });
+        }, executorService);
     }
 
     /**
