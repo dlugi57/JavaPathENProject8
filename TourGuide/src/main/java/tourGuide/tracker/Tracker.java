@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Tracker extends Thread {
-    private Logger logger = LoggerFactory.getLogger(Tracker.class);
+    private final Logger logger = LoggerFactory.getLogger(Tracker.class);
     private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final TourGuideService tourGuideService;
@@ -20,8 +20,6 @@ public class Tracker extends Thread {
 
     public Tracker(TourGuideService tourGuideService) {
         this.tourGuideService = tourGuideService;
-
-        //executorService.submit(this);
     }
 
     /**
@@ -32,10 +30,16 @@ public class Tracker extends Thread {
         executorService.shutdownNow();
     }
 
+    /**
+     * Separate from constructor tracking executor
+     */
     public void startTracking(){
         executorService.submit(this);
     }
 
+    /**
+     * run tracking of users service
+     */
     @Override
     public void run() {
         StopWatch stopWatch = new StopWatch();
@@ -49,11 +53,7 @@ public class Tracker extends Thread {
             logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
             stopWatch.start();
 
-            // set parallel stream to gain on performance
-            users.forEach(u -> {
-                tourGuideService.trackUserLocation(u);
-            });
-            //users.parallelStream().forEach(u -> tourGuideService.trackUserLocation(u));
+            users.forEach(u -> tourGuideService.trackUserLocation(u));
 
             stopWatch.stop();
             logger.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds.");
