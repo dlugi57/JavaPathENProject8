@@ -16,7 +16,6 @@ import tripPricer.Provider;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-// TODO: 15/01/2021 did i need make the controller unit test  
 @RestController
 public class TourGuideController {
 
