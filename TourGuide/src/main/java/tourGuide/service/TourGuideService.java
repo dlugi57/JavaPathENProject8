@@ -95,7 +95,7 @@ public class TourGuideService {
      * @return list of users recent locations
      */
     public Map<String, Location> getAllCurrentLocations() {
-// TODO: 13/01/2021 we did'n chack this one last time
+
         List<User> usersList = getAllUsers();
         Map<String, Location> usersLocations = new HashMap<>();
 
@@ -187,7 +187,6 @@ public class TourGuideService {
      * @return last visited location
      */
     public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
-        // TODO: 13/01/2021 i used supply async to get result and then calculate rewards
         // set completable future supply methode to get asynchronous result from future
         return CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId())).thenApply(visitedLocation -> {
             user.addToVisitedLocations(visitedLocation);
