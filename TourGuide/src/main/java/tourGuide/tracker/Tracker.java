@@ -18,6 +18,10 @@ public class Tracker extends Thread {
     private final TourGuideService tourGuideService;
     private boolean stop = false;
 
+    /**
+     * Initialize service
+     * @param tourGuideService tour guide service
+     */
     public Tracker(TourGuideService tourGuideService) {
         this.tourGuideService = tourGuideService;
     }
