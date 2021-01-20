@@ -36,6 +36,7 @@ public class GpsServiceImpl implements GpsService {
      */
     @Override
     public VisitedLocation getUserLocation(UUID userId) {
+        logger.debug(gpsUtil.getUserLocation(userId));
         return gpsUtil.getUserLocation(userId);
     }
 
@@ -45,7 +46,8 @@ public class GpsServiceImpl implements GpsService {
      */
     @Override
     public List<Attraction> getAttractions() {
+        logger.debug(gpsUtil.getAttractions());
         return gpsUtil.getAttractions();
-    };
+    }
 
 }
