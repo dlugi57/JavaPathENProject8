@@ -44,7 +44,7 @@ public class GpsController {
     @GetMapping("/getUserLocation")
     public VisitedLocation getUserLocation(@RequestParam final UUID userId) {
         logger.info("GET VisitedLocation -> getUserLocation /**/ HttpStatus : " +
-                HttpStatus.OK + "response" + gpsService.getUserLocation(userId).toString());
+                HttpStatus.OK + " -> response" + gpsService.getUserLocation(userId).toString());
 
         return gpsService.getUserLocation(userId);
     }
@@ -57,7 +57,7 @@ public class GpsController {
     @GetMapping("/getAttractions")
     public List<Attraction> getAttractions() {
         logger.info("GET Attraction List -> getAttractions /**/ HttpStatus : " +
-                HttpStatus.OK + "response" + gpsService.getAttractions().toString());
+                HttpStatus.OK + " -> response" + gpsService.getAttractions().toString());
         return gpsService.getAttractions();
     }
 
