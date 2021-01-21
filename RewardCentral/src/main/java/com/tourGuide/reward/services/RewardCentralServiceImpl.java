@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
 
+import java.util.UUID;
+
 @Service
 public class RewardCentralServiceImpl implements RewardCentralService {
 
@@ -25,5 +27,16 @@ public class RewardCentralServiceImpl implements RewardCentralService {
         this.rewardCentral = rewardCentral;
     }
 
-
+    /**
+     * Get attraction reward points
+     *
+     * @param attractionId attraction id
+     * @param userId user id
+     * @return rewards points
+     */
+    @Override
+    public int getAttractionRewardPoints(UUID attractionId, UUID userId) {
+        logger.debug(rewardCentral.getAttractionRewardPoints(attractionId, userId));
+        return rewardCentral.getAttractionRewardPoints(attractionId, userId);
+    }
 }
