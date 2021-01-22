@@ -3,6 +3,7 @@
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="web" url="file://$PROJECT_DIR$/GpsUtil" />
+    <file type="web" url="file://$PROJECT_DIR$/RewardCentral" />
     <file type="web" url="file://$PROJECT_DIR$/TourGuide" />
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_14" project-jdk-name="1.8" project-jdk-type="JavaSDK" />
