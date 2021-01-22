@@ -4,8 +4,10 @@ import gpsUtil.GpsUtil;
 import gpsUtil.location.Attraction;
 import gpsUtil.location.Location;
 import gpsUtil.location.VisitedLocation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rewardCentral.RewardCentral;
+import tourGuide.proxies.RewardCentralProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
 
@@ -17,6 +19,9 @@ import java.util.concurrent.Executors;
 
 @Service
 public class RewardsService {
+
+    @Autowired
+    RewardCentralProxy rewardCentralProxy;
 
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
 
@@ -37,6 +42,7 @@ public class RewardsService {
         this.gpsUtil = gpsUtil;
         this.rewardsCentral = rewardCentral;
     }
+    
 
     /**
      * Set proximity buffer to know when user will get points of attraction
@@ -117,7 +123,12 @@ public class RewardsService {
      * @return reward points
      */
     public int getRewardPoints(Attraction attraction, User user) {
-        return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+        // TODO: 23/01/2021 make this works in performance test
+        return rewardCentralProxy.getAttractionRewardPoints(attraction.attractionId,
+                user.getUserId());
+        // TODO: 22/01/2021 make global variable oto test
+        //return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId
+        // ());
     }
 
     /**
