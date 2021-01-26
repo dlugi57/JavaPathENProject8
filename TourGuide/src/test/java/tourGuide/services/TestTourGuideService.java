@@ -1,13 +1,15 @@
 package tourGuide.services;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
+
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import rewardCentral.RewardCentral;
 import tourGuide.DTO.NearbyAttractionDTO;
 import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.model.Location;
+import tourGuide.model.VisitedLocation;
+import tourGuide.proxies.GpsUtilProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
@@ -26,12 +28,16 @@ import static org.junit.Assert.assertTrue;
 
 public class TestTourGuideService {
 
+    @Autowired
+    GpsUtilProxy gpsUtilProxy;
+
+    @Autowired
+    TourGuideService tourGuideService;
+
     @Test
     public void getUserLocation() throws ExecutionException, InterruptedException {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService();
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).get();
@@ -41,10 +47,8 @@ public class TestTourGuideService {
 
     @Test
     public void addUser() {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService();
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         User user2 = new User(UUID.randomUUID(), "jon2", "000", "jon2@tourGuide.com");
@@ -63,10 +67,8 @@ public class TestTourGuideService {
 
     @Test
     public void getAllUsers() {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService();
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         User user2 = new User(UUID.randomUUID(), "jon2", "000", "jon2@tourGuide.com");
@@ -84,10 +86,8 @@ public class TestTourGuideService {
 
     @Test
     public void trackUser() throws ExecutionException, InterruptedException {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).get();
@@ -99,10 +99,8 @@ public class TestTourGuideService {
 
     @Test
     public void getNearbyAttractions() throws ExecutionException, InterruptedException {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService();
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user).get();
@@ -116,10 +114,8 @@ public class TestTourGuideService {
 
     @Test
     public void getTripDeals() {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 
@@ -132,8 +128,6 @@ public class TestTourGuideService {
 
     @Test
     public void getAllCurrentLocations() {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
 
         // GIVEN
@@ -144,7 +138,7 @@ public class TestTourGuideService {
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
         User user2 = new User(UUID.randomUUID(), "jon2", "222",
                 "jon2@tourGuide.com");
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.addUser(user);
         tourGuideService.addUser(user2);
         user.addToVisitedLocations(
@@ -162,11 +156,9 @@ public class TestTourGuideService {
 
     @Test
     public void updateUserPreferences() {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         InternalTestHelper.setInternalUserNumber(0);
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
         tourGuideService.addUser(user);
 

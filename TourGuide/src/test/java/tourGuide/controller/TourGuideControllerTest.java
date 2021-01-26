@@ -1,10 +1,7 @@
 package tourGuide.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
+
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
@@ -18,6 +15,11 @@ import rewardCentral.RewardCentral;
 import tourGuide.DTO.NearbyAttractionDTO;
 import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.model.Attraction;
+import tourGuide.model.Location;
+import tourGuide.model.VisitedLocation;
+import tourGuide.proxies.GpsUtilProxy;
+import tourGuide.proxies.RewardCentralProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
@@ -43,6 +45,19 @@ public class TourGuideControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    TourGuideService tourGuideService;
+
+    @Autowired
+    RewardCentralProxy rewardCentralProxy;
+
+    @Autowired
+    RewardsService rewardsService;
+
+    @Autowired
+    GpsUtilProxy gpsUtilProxy;
+
+
     @MockBean
     private TourGuideService service;
 
@@ -51,11 +66,8 @@ public class TourGuideControllerTest {
 
     @BeforeEach
     void init() {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardCentral rewardCentral = new RewardCentral();
-        RewardsService rewardsService = new RewardsService(gpsUtil, rewardCentral);
         InternalTestHelper.setInternalUserNumber(1);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+       // TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
     }
 

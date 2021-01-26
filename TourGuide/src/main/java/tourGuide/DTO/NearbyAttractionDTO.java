@@ -1,6 +1,6 @@
 package tourGuide.DTO;
-import gpsUtil.location.Location;
 import lombok.Data;
+import tourGuide.model.Location;
 
 @Data
 public class NearbyAttractionDTO {

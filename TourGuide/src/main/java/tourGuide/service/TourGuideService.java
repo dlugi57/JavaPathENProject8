@@ -1,17 +1,19 @@
 package tourGuide.service;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tourGuide.DTO.NearbyAttractionDTO;
 import tourGuide.DTO.UserLocationDTO;
 import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.mapper.UserPreferencesMapper;
+import tourGuide.model.Attraction;
+import tourGuide.model.Location;
+import tourGuide.model.VisitedLocation;
+import tourGuide.proxies.GpsUtilProxy;
 import tourGuide.tracker.Tracker;
 import tourGuide.user.User;
 import tourGuide.user.UserPreferences;
@@ -22,7 +24,8 @@ import tripPricer.TripPricer;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -31,25 +34,24 @@ public class TourGuideService {
 
     private final Logger logger = LoggerFactory.getLogger(TourGuideService.class);
 
-    private final GpsUtil gpsUtil;
-    private final RewardsService rewardsService;
+    @Autowired
+    RewardsService rewardsService;
+
+    @Autowired
+    GpsUtilProxy gpsUtilProxy;
+
     private final TripPricer tripPricer = new TripPricer();
     public final Tracker tracker;
 
-    boolean testMode = true;
+    boolean testMode = false;
 
     /**
      * Service constructor
-     *
-     * @param gpsUtil        initialize gps util
-     * @param rewardsService initialize reward service
      */
-    public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
+    public TourGuideService() {
         // patch of wrong locale in application
         Locale.setDefault(Locale.US);
 
-        this.gpsUtil = gpsUtil;
-        this.rewardsService = rewardsService;
         //initialize tracker
         tracker = new Tracker(this);
 
@@ -188,7 +190,7 @@ public class TourGuideService {
      */
     public CompletableFuture<VisitedLocation> trackUserLocation(User user) {
         // set completable future supply methode to get asynchronous result from future
-        return CompletableFuture.supplyAsync(() -> gpsUtil.getUserLocation(user.getUserId())).thenApply(visitedLocation -> {
+        return CompletableFuture.supplyAsync(() -> gpsUtilProxy.getUserLocation(user.getUserId())).thenApply(visitedLocation -> {
             user.addToVisitedLocations(visitedLocation);
             try {
                 rewardsService.calculateRewards(user).get();
@@ -213,7 +215,7 @@ public class TourGuideService {
         // dto result list
         List<NearbyAttractionDTO> nearbyAttractions = new ArrayList<>();
 
-        List<Attraction> attractions = gpsUtil.getAttractions();
+        List<Attraction> attractions = gpsUtilProxy.getAttractions();
 
         // get 5 closest attractions and populate DTO
         attractions.parallelStream().sorted(Comparator.comparingDouble(o -> rewardsService.getDistance(o,

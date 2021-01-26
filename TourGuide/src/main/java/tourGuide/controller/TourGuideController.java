@@ -1,7 +1,6 @@
 package tourGuide.controller;
 
 import com.jsoniter.output.JsonStream;
-import gpsUtil.location.VisitedLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import tourGuide.DTO.UserPreferencesDTO;
+import tourGuide.model.VisitedLocation;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
 import tripPricer.Provider;

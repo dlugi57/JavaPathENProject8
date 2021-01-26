@@ -1,12 +1,12 @@
 package tourGuide.service;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
-import gpsUtil.location.Location;
-import gpsUtil.location.VisitedLocation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import rewardCentral.RewardCentral;
+import tourGuide.model.Attraction;
+import tourGuide.model.Location;
+import tourGuide.model.VisitedLocation;
+import tourGuide.proxies.GpsUtilProxy;
 import tourGuide.proxies.RewardCentralProxy;
 import tourGuide.user.User;
 import tourGuide.user.UserReward;
@@ -23,26 +23,24 @@ public class RewardsService {
     @Autowired
     RewardCentralProxy rewardCentralProxy;
 
+    @Autowired
+    GpsUtilProxy gpsUtilProxy;
+
     private static final double STATUTE_MILES_PER_NAUTICAL_MILE = 1.15077945;
 
     // proximity in miles
     private int defaultProximityBuffer = 10;
     private int proximityBuffer = defaultProximityBuffer;
     private int attractionProximityRange = 200;
-    private final GpsUtil gpsUtil;
-    private final RewardCentral rewardsCentral;
+
 
     /**
      * Initialization of services
-     *
-     * @param gpsUtil       gps service instantiation
-     * @param rewardCentral reward central instantiation
      */
-    public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
-        this.gpsUtil = gpsUtil;
-        this.rewardsCentral = rewardCentral;
+    public RewardsService() {
+
     }
-    
+
 
     /**
      * Set proximity buffer to know when user will get points of attraction
@@ -72,7 +70,7 @@ public class RewardsService {
 
         return CompletableFuture.runAsync(() -> {
 
-            List<Attraction> attractions = gpsUtil.getAttractions();
+            List<Attraction> attractions = gpsUtilProxy.getAttractions();
             // to prevent asynchronous array insertion
             CopyOnWriteArrayList<VisitedLocation> userLocations = new CopyOnWriteArrayList<>();
 
@@ -124,9 +122,7 @@ public class RewardsService {
      */
     public int getRewardPoints(Attraction attraction, User user) {
 
-        //return rewardCentralProxy.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
-
-        return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+        return rewardCentralProxy.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
 
     }
 

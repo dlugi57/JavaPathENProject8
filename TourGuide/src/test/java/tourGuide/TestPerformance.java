@@ -1,12 +1,14 @@
 package tourGuide;
 
-import gpsUtil.GpsUtil;
-import gpsUtil.location.Attraction;
-import gpsUtil.location.VisitedLocation;
+
 import org.apache.commons.lang3.time.StopWatch;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
+import tourGuide.model.Attraction;
+import tourGuide.model.VisitedLocation;
+import tourGuide.proxies.GpsUtilProxy;
 import tourGuide.service.RewardsService;
 import tourGuide.service.TourGuideService;
 import tourGuide.user.User;
@@ -21,6 +23,15 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertTrue;
 
 public class TestPerformance {
+
+    @Autowired
+    TourGuideService tourGuideService;
+
+    @Autowired
+    GpsUtilProxy gpsUtilProxy;
+
+    @Autowired
+    RewardsService rewardsService;
 
     /*
      * A note on performance improvements:
@@ -44,11 +55,9 @@ public class TestPerformance {
 
     @Test
     public void highVolumeTrackLocation() throws InterruptedException, ExecutionException {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         // Users should be incremented up to 100,000, and test finishes within 15 minutes
         InternalTestHelper.setInternalUserNumber(1000);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
 
         List<User> allUsers = new ArrayList<>();
@@ -72,19 +81,17 @@ public class TestPerformance {
 
     @Test
     public void highVolumeGetRewards() throws ExecutionException, InterruptedException {
-        GpsUtil gpsUtil = new GpsUtil();
-        RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 
         // Users should be incremented up to 100,000, and test finishes within 20 minutes
         InternalTestHelper.setInternalUserNumber(10000);
-        TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
+        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
 
         List<CompletableFuture> futures = new ArrayList();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        Attraction attraction = gpsUtil.getAttractions().get(0);
+        Attraction attraction = gpsUtilProxy.getAttractions().get(0);
         List<User> allUsers = new ArrayList<>();
         allUsers = tourGuideService.getAllUsers();
 
