@@ -1,17 +1,16 @@
 package tourGuide.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import rewardCentral.RewardCentral;
 import tourGuide.DTO.NearbyAttractionDTO;
 import tourGuide.DTO.UserPreferencesDTO;
 import tourGuide.helper.InternalTestHelper;
@@ -40,26 +39,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(TourGuideController.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class TourGuideControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    TourGuideService tourGuideService;
-
-    @Autowired
+    @MockBean
     RewardCentralProxy rewardCentralProxy;
 
-    @Autowired
+    @MockBean
     RewardsService rewardsService;
 
-    @Autowired
+    @MockBean
     GpsUtilProxy gpsUtilProxy;
 
-
     @MockBean
-    private TourGuideService service;
+    private TourGuideService tourGuideService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -67,7 +63,6 @@ public class TourGuideControllerTest {
     @BeforeEach
     void init() {
         InternalTestHelper.setInternalUserNumber(1);
-       // TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
     }
 
@@ -86,7 +81,7 @@ public class TourGuideControllerTest {
         date.setTime(System.currentTimeMillis());
         VisitedLocation visitedLocationMock = new VisitedLocation(user.getUserId(), locationMock, date);
 
-        when(service.getUserLocation(service.getUser(anyString()))).thenReturn(visitedLocationMock);
+        when(tourGuideService.getUserLocation(tourGuideService.getUser(anyString()))).thenReturn(visitedLocationMock);
         this.mockMvc.perform(get("/getLocation")
                 .param("userName", user.getUserName()))
                 .andDo(print())
@@ -113,7 +108,7 @@ public class TourGuideControllerTest {
 
         User user = new User(UUID.randomUUID(), "internalUser1", "000",
                 "jon@tourGuide.com");
-        when(service.getNearByAttractions(any(User.class))).thenReturn(nearbyAttractions);
+        when(tourGuideService.getNearByAttractions(any(User.class))).thenReturn(nearbyAttractions);
 
         this.mockMvc
                 .perform(get("/getNearbyAttractions")
@@ -141,7 +136,7 @@ public class TourGuideControllerTest {
     public void testGetRewards() throws Exception {
         User user = new User(UUID.randomUUID(), "internalUser1", "000",
                 "jon@tourGuide.com");
-        when(service.getUserRewards(any(User.class))).thenReturn(userRewards);
+        when(tourGuideService.getUserRewards(any(User.class))).thenReturn(userRewards);
 
         this.mockMvc
                 .perform(get("/getRewards")
@@ -151,21 +146,21 @@ public class TourGuideControllerTest {
 
     }
 
-    public static Location location =  new Location(1.0d, 1.0d);
+    public static Location location = new Location(1.0d, 1.0d);
 
     public static Map<String, Location> locations = new HashMap<>();
 
     static {
-        locations.put("provider",location);
-        locations.put("provider",location);
-        locations.put("provider",location);
+        locations.put("provider", location);
+        locations.put("provider1", location);
+        locations.put("provider2", location);
     }
 
 
     @Test
     public void testGetAllCurrentLocations() throws Exception {
 
-        when(service.getAllCurrentLocations()).thenReturn(locations);
+        when(tourGuideService.getAllCurrentLocations()).thenReturn(locations);
 
         this.mockMvc
                 .perform(get("/getAllCurrentLocations")
@@ -187,7 +182,7 @@ public class TourGuideControllerTest {
     public void testGetTripDeals() throws Exception {
         User user = new User(UUID.randomUUID(), "internalUser1", "000",
                 "jon@tourGuide.com");
-        when(service.getTripDeals(any(User.class))).thenReturn(providers);
+        when(tourGuideService.getTripDeals(any(User.class))).thenReturn(providers);
 
         this.mockMvc
                 .perform(get("/getTripDeals")
@@ -212,7 +207,7 @@ public class TourGuideControllerTest {
         userPreferencesDTO.setTicketQuantity(5);
         userPreferencesDTO.setNumberOfAdults(6);
 
-        when(service.updateUserPreferences(anyString(), any(UserPreferencesDTO.class))).thenReturn(true);
+        when(tourGuideService.updateUserPreferences(anyString(), any(UserPreferencesDTO.class))).thenReturn(true);
         this.mockMvc.perform(put("/updateUserPreferences")
                 .param("userName", user.getUserName())
                 .content((mapper.writeValueAsString(userPreferencesDTO)))
@@ -226,7 +221,7 @@ public class TourGuideControllerTest {
     public void updateUserPreferences_Invalid() throws Exception {
         User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
 
-        Mockito.when(service.updateUserPreferences(anyString(), any(UserPreferencesDTO.class))).thenReturn(false);
+        Mockito.when(tourGuideService.updateUserPreferences(anyString(), any(UserPreferencesDTO.class))).thenReturn(false);
         this.mockMvc.perform(put("/updateUserPreferences")
                 .param("userName", user.getUserName()))
                 .andDo(print())

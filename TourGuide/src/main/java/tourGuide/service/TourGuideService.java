@@ -43,7 +43,7 @@ public class TourGuideService {
     private final TripPricer tripPricer = new TripPricer();
     public final Tracker tracker;
 
-    boolean testMode = false;
+    boolean testMode = true;
 
     /**
      * Service constructor
