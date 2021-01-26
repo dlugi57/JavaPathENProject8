@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.UUID;
 
 @FeignClient(name = "gps", url = "localhost:8081")
-
 public interface GpsUtilProxy {
 
     @GetMapping("/gps/getUserLocation")

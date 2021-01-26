@@ -123,12 +123,11 @@ public class RewardsService {
      * @return reward points
      */
     public int getRewardPoints(Attraction attraction, User user) {
-        // TODO: 23/01/2021 make this works in performance test
-        return rewardCentralProxy.getAttractionRewardPoints(attraction.attractionId,
-                user.getUserId());
-        // TODO: 22/01/2021 make global variable oto test
-        //return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId
-        // ());
+
+        //return rewardCentralProxy.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+
+        return rewardsCentral.getAttractionRewardPoints(attraction.attractionId, user.getUserId());
+
     }
 
     /**

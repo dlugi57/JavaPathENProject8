@@ -47,7 +47,7 @@ public class TestPerformance {
         GpsUtil gpsUtil = new GpsUtil();
         RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
         // Users should be incremented up to 100,000, and test finishes within 15 minutes
-        InternalTestHelper.setInternalUserNumber(100000);
+        InternalTestHelper.setInternalUserNumber(1000);
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
 
@@ -58,9 +58,9 @@ public class TestPerformance {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        allUsers.forEach(u -> futures.add(CompletableFuture.runAsync(() -> {
-            tourGuideService.trackUserLocation(u);
-        })));
+        allUsers.forEach(u -> futures.add(
+            tourGuideService.trackUserLocation(u)
+        ));
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         combinedFuture.get();
 
@@ -76,7 +76,7 @@ public class TestPerformance {
         RewardsService rewardsService = new RewardsService(gpsUtil, new RewardCentral());
 
         // Users should be incremented up to 100,000, and test finishes within 20 minutes
-        InternalTestHelper.setInternalUserNumber(100000);
+        InternalTestHelper.setInternalUserNumber(10000);
         TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
 
@@ -91,9 +91,13 @@ public class TestPerformance {
         allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(),
 				attraction, new Date())));
 
-        allUsers.forEach(u -> futures.add(CompletableFuture.runAsync(() -> {
+/*        allUsers.forEach(u -> futures.add(CompletableFuture.runAsync(() -> {
             rewardsService.calculateRewards(u);
-        })));
+        })));*/
+
+        allUsers.forEach(u -> futures.add(
+            rewardsService.calculateRewards(u)
+        ));
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futures.toArray(new CompletableFuture[allUsers.size()]));
         combinedFuture.get();
