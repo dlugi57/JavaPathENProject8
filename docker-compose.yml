@@ -1,0 +1,35 @@
+version: '3'
+services:
+  gps:
+    build:
+      context: ./GpsUtil/
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+
+    restart: always
+
+  rewards:
+    build:
+      context: ./RewardCentral/
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+
+    restart: always
+
+  guide:
+    environment:
+      - CLIENT_REWARDS_BASE_URL=http://rewards:8082
+      - CLIENT_GPS_BASE_URL=http://gps:8081
+    build:
+      context: ./TourGuide/
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+
+    depends_on:
+      - rewards
+      - gps
+
+    restart: always

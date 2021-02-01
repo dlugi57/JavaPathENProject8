@@ -10,7 +10,7 @@ import tourGuide.model.VisitedLocation;
 import java.util.List;
 import java.util.UUID;
 
-@FeignClient(name = "gps", url = "localhost:8081")
+@FeignClient(name = "gps",  url = "${CLIENT_GPS_BASE_URL:http://localhost:8081}")
 public interface GpsUtilProxy {
 
     @GetMapping("/gps/getUserLocation")
