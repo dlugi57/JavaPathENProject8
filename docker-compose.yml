@@ -4,7 +4,7 @@ services:
     build:
       context: ./GpsUtil/
       dockerfile: Dockerfile
-    image: gps
+    image:  dlugi57/gps
     container_name: gps
     ports:
       - "8081:8081"
@@ -15,7 +15,7 @@ services:
     build:
       context: ./RewardCentral/
       dockerfile: Dockerfile
-    image: reward
+    image: dlugi57/reward
     container_name: reward
     ports:
       - "8082:8082"
@@ -29,7 +29,7 @@ services:
     build:
       context: ./TourGuide/
       dockerfile: Dockerfile
-    image: tourguide
+    image: dlugi57/tourguide
     container_name: guide
     ports:
       - "8083:8083"

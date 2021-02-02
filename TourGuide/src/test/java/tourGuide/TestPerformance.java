@@ -2,12 +2,12 @@ package tourGuide;
 
 
 import org.apache.commons.lang3.time.StopWatch;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import rewardCentral.RewardCentral;
 import tourGuide.helper.InternalTestHelper;
 import tourGuide.model.Attraction;
 import tourGuide.model.VisitedLocation;
@@ -57,12 +57,11 @@ public class TestPerformance {
      *     highVolumeGetRewards: 100,000 users within 20 minutes:
      *          assertTrue(TimeUnit.MINUTES.toSeconds(20) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
      */
-
+    @Ignore
     @Test
     public void highVolumeTrackLocation() throws InterruptedException, ExecutionException {
         // Users should be incremented up to 100,000, and test finishes within 15 minutes
         InternalTestHelper.setInternalUserNumber(1000);
-        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
 
         List<User> allUsers = new ArrayList<>();
@@ -73,7 +72,7 @@ public class TestPerformance {
         stopWatch.start();
 
         allUsers.forEach(u -> futures.add(
-            tourGuideService.trackUserLocation(u)
+                tourGuideService.trackUserLocation(u)
         ));
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         combinedFuture.get();
@@ -84,12 +83,12 @@ public class TestPerformance {
         assertTrue(TimeUnit.MINUTES.toSeconds(15) >= TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()));
     }
 
+    @Ignore
     @Test
     public void highVolumeGetRewards() throws ExecutionException, InterruptedException {
 
         // Users should be incremented up to 100,000, and test finishes within 20 minutes
         InternalTestHelper.setInternalUserNumber(1000);
-        //TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
         tourGuideService.tracker.stopTracking();
 
         List<CompletableFuture> futures = new ArrayList();
@@ -101,14 +100,10 @@ public class TestPerformance {
         allUsers = tourGuideService.getAllUsers();
 
         allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(),
-				attraction, new Date())));
-
-/*        allUsers.forEach(u -> futures.add(CompletableFuture.runAsync(() -> {
-            rewardsService.calculateRewards(u);
-        })));*/
+                attraction, new Date())));
 
         allUsers.forEach(u -> futures.add(
-            rewardsService.calculateRewards(u)
+                rewardsService.calculateRewards(u)
         ));
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futures.toArray(new CompletableFuture[allUsers.size()]));
