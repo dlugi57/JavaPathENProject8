@@ -91,10 +91,6 @@ public class TestPerformance {
         allUsers.forEach(u -> u.addToVisitedLocations(new VisitedLocation(u.getUserId(),
 				attraction, new Date())));
 
-/*        allUsers.forEach(u -> futures.add(CompletableFuture.runAsync(() -> {
-            rewardsService.calculateRewards(u);
-        })));*/
-
         allUsers.forEach(u -> futures.add(
             rewardsService.calculateRewards(u)
         ));
